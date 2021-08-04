@@ -32,11 +32,10 @@ contract EventTicket is ERC721Full, Ownable {
     
     mapping(uint => Ticket) public tickets;
     
+    //mapping(uint => Offer[]) public offers;
     mapping(uint => Offer) public offers;
     
-    
     event PurchaseOffer(uint token_id, uint amount);
-    
     
     
     event Sale(uint token_id 
@@ -47,14 +46,15 @@ contract EventTicket is ERC721Full, Ownable {
     event Reject(uint token_id);
     
     //Ticket can be registered by the owner of the contract.
-    function ticketRegister(string memory token_uri) public onlyOwner returns (uint) {
+    //function ticketRegister(string memory token_uri) public onlyOwner returns (uint) {
+    function ticketRegister() public onlyOwner returns (uint) {
         
         token_ids.increment();
         uint token_id = token_ids.current();
         
         _mint(owner(), token_id);
         
-        _setTokenURI(token_id, token_uri);
+        //_setTokenURI(token_id, token_uri);
         
         tickets[token_id] = Ticket("", "", owner(), 0);
         
@@ -101,19 +101,22 @@ contract EventTicket is ERC721Full, Ownable {
         
         require(msg.value > 0 finney && msg.value <= 40 finney, "Offer must be greater than 0 and less than or equal to 40 finney!");
         require(tickets[token_id].timesSold > 0, 'Ticket is not available for an offer!');
+        require(offers[token_id].offer_amount == 0, 'There is already an offer pending for this ticket!');
         
         //Add as an offer
+        //offers[token_id].push(Offer(name, email, msg.sender, msg.value, false));
         offers[token_id] = Offer(name, email, msg.sender, msg.value, false);
         
         emit PurchaseOffer(token_id, msg.value);
         
     }
     
+    
     function acceptOffer(uint token_id) public {
         
         //Ensure the accepting party is the owner
         require(ownerOf(token_id) == msg.sender, 'You are not the owner of this ticket!');
-        //Ensure an open offer exists this ticket.
+        //Ensure an open offer exists for this ticket.
         require(offers[token_id].offer_amount > 0 && !offers[token_id].offer_closed, 'This ticket does not have any offers!');
         
         
@@ -181,6 +184,7 @@ contract EventTicket is ERC721Full, Ownable {
         emit Sale(token_id);
         
     }
+    
     
     
 
