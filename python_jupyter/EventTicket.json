@@ -19,6 +19,29 @@
 		"type": "function"
 	},
 	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"name": "email",
+				"type": "string"
+			}
+		],
+		"name": "ticketPurchase",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
 		"constant": true,
 		"inputs": [],
 		"name": "name",
@@ -180,6 +203,14 @@
 		"name": "tickets",
 		"outputs": [
 			{
+				"name": "owner_name",
+				"type": "string"
+			},
+			{
+				"name": "owner_email",
+				"type": "string"
+			},
+			{
 				"name": "owner",
 				"type": "address"
 			},
@@ -190,29 +221,6 @@
 		],
 		"payable": false,
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "token_id",
-				"type": "uint256"
-			},
-			{
-				"name": "to",
-				"type": "address"
-			}
-		],
-		"name": "initialTicketSale",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -296,6 +304,55 @@
 		"type": "function"
 	},
 	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "token_id",
+				"type": "uint256"
+			}
+		],
+		"name": "rejectOffer",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "offers",
+		"outputs": [
+			{
+				"name": "offer_name",
+				"type": "string"
+			},
+			{
+				"name": "offer_email",
+				"type": "string"
+			},
+			{
+				"name": "offer_address",
+				"type": "address"
+			},
+			{
+				"name": "offer_amount",
+				"type": "uint256"
+			},
+			{
+				"name": "offer_closed",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"constant": true,
 		"inputs": [],
 		"name": "owner",
@@ -359,6 +416,33 @@
 		"constant": false,
 		"inputs": [
 			{
+				"name": "token_id",
+				"type": "uint256"
+			},
+			{
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"name": "email",
+				"type": "string"
+			}
+		],
+		"name": "offerPurchase",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
 				"name": "from",
 				"type": "address"
 			},
@@ -376,6 +460,20 @@
 			}
 		],
 		"name": "safeTransferFrom",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "token_id",
+				"type": "uint256"
+			}
+		],
+		"name": "acceptOffer",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -427,29 +525,6 @@
 		"constant": false,
 		"inputs": [
 			{
-				"name": "token_id",
-				"type": "uint256"
-			},
-			{
-				"name": "to",
-				"type": "address"
-			}
-		],
-		"name": "ticketResale",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
 				"name": "newOwner",
 				"type": "address"
 			}
@@ -473,9 +548,38 @@
 				"indexed": false,
 				"name": "token_id",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "PurchaseOffer",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "token_id",
+				"type": "uint256"
 			}
 		],
 		"name": "Sale",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "token_id",
+				"type": "uint256"
+			}
+		],
+		"name": "Reject",
 		"type": "event"
 	},
 	{
