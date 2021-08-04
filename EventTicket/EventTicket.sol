@@ -22,15 +22,29 @@ contract EventTicket is ERC721Full, Ownable {
         uint timesSold;
     }
     
+    struct Offer {
+        string offer_name;
+        string offer_email;
+        address payable offer_address;
+        uint offer_amount;
+        bool offer_closed;
+    }
+    
     mapping(uint => Ticket) public tickets;
     
-    //mapping(uint => TicketHolder) public holders;
+    mapping(uint => Offer) public offers;
+    
+    
+    event PurchaseOffer(uint token_id, uint amount);
+    
     
     
     event Sale(uint token_id 
                //string report_uri  --we can store an addition report uri where we can put ticket sale transaction info in pinata
                );
     
+    
+    event Reject(uint token_id);
     
     //Ticket can be registered by the owner of the contract.
     function ticketRegister(string memory token_uri) public onlyOwner returns (uint) {
@@ -48,7 +62,7 @@ contract EventTicket is ERC721Full, Ownable {
         
     }
     
-    
+    //Purchase option available to the general public
     function ticketPurchase(string memory name, string memory email) public payable returns (uint) {
         
         uint returnChange;
@@ -83,6 +97,66 @@ contract EventTicket is ERC721Full, Ownable {
     }
     
     
+    function offerPurchase(uint token_id, string memory name, string memory email) public payable returns (uint) {
+        
+        require(msg.value > 0 finney && msg.value <= 40 finney, "Offer must be greater than 0 and less than or equal to 40 finney!");
+        require(tickets[token_id].timesSold > 0, 'Ticket is not available for an offer!');
+        
+        //Add as an offer
+        offers[token_id] = Offer(name, email, msg.sender, msg.value, false);
+        
+        emit PurchaseOffer(token_id, msg.value);
+        
+    }
+    
+    function acceptOffer(uint token_id) public {
+        
+        //Ensure the accepting party is the owner
+        require(ownerOf(token_id) == msg.sender, 'You are not the owner of this ticket!');
+        //Ensure an open offer exists this ticket.
+        require(offers[token_id].offer_amount > 0 && !offers[token_id].offer_closed, 'This ticket does not have any offers!');
+        
+        
+        //Increase the timesSold counter.
+        tickets[token_id].timesSold += 1;
+        
+        //Transfer ownership (data)
+        tickets[token_id] = Ticket(offers[token_id].offer_name, offers[token_id].offer_email, offers[token_id].offer_address, tickets[token_id].timesSold);
+        
+        //Close the offer
+        offers[token_id].offer_closed = true;
+        
+        //Transfer the token to the offering party
+        _transferFrom(msg.sender, offers[token_id].offer_address, token_id);
+        
+        //Transfer the offered funds to the accepting party.
+        msg.sender.transfer(offers[token_id].offer_amount);
+        
+        emit Sale(token_id);
+        
+    }
+    
+    
+    function rejectOffer(uint token_id) public {
+        
+        //Ensure the accepting party is the owner
+        require(ownerOf(token_id) == msg.sender, 'You are not the owner of this ticket!');
+        //Ensure an open offer exists this ticket.
+        require(offers[token_id].offer_amount > 0 && !offers[token_id].offer_closed, 'This ticket does not have any offers!');
+        
+        //Close the offer
+        offers[token_id].offer_closed = true;
+        
+        //Refund the offering party
+        offers[token_id].offer_address.transfer(offers[token_id].offer_amount);
+        
+        emit Reject(token_id);
+        
+    }
+    
+    
+    
+    //Gets the next unsold ticket (token_id)
     function getAvailableToken() internal view returns (uint) {
         
         uint token_id = 0;
@@ -106,23 +180,6 @@ contract EventTicket is ERC721Full, Ownable {
         
         emit Sale(token_id);
         
-    }
-    
-    //Resale can be done by the current owner of the ticket
-    function ticketResale(uint token_id, address to) public returns (uint) {
-        
-        tickets[token_id].timesSold += 1;
-
-        emit Sale(token_id);
-        
-        safeTransferFrom(msg.sender, to, token_id);
-        
-        //Set the new owner and pass on the timesSold var.
-        //tickets[token_id] = Ticket(to, tickets[token_id].timesSold);
-
-        return tickets[token_id].timesSold;
-        
-
     }
     
     
