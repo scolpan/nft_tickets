@@ -48,18 +48,24 @@ contract EventTicket is ERC721Full, Ownable {
     
     //Ticket can be registered by the owner of the contract.
     //function ticketRegister(string memory token_uri) public onlyOwner returns (uint) {
-    function ticketRegister() public onlyOwner returns (uint) {
+    function ticketRegister(uint number) public onlyOwner returns (uint) {
         
-        token_ids.increment();
-        uint token_id = token_ids.current();
+        uint token_id;
         
-        _mint(owner(), token_id);
+        for (uint i=1; i<=number; i++) {
         
-        //_setTokenURI(token_id, token_uri);
+            token_ids.increment();
+            token_id = token_ids.current();
+            
+            _mint(owner(), token_id);
+            
+            //_setTokenURI(token_id, token_uri);
+            
+            tickets[token_id] = Ticket("", "", owner(), 0);
         
-        tickets[token_id] = Ticket("", "", owner(), 0);
+        }
         
-        return token_id;
+        //return token_id;
         
     }
     
@@ -107,7 +113,7 @@ contract EventTicket is ERC721Full, Ownable {
         
         //Add as an offer
         //offers[token_id].push(Offer(name, email, msg.sender, msg.value, false));
-        offers[token_id] = Offer(now, now + 24 hours, name, email, msg.sender, msg.value, false, 'active');
+        offers[token_id] = Offer(now, now + 5 minutes, name, email, msg.sender, msg.value, false, 'active');
         
         emit PurchaseOffer(token_id, msg.value);
         
