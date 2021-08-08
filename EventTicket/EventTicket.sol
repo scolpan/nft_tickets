@@ -40,7 +40,8 @@ contract EventTicket is ERC721Full, Ownable {
     
     event PurchaseOffer(uint token_id, uint amount);
     
-    event Sale(uint token_id 
+    event Sale(uint token_id,
+               string name
                //string report_uri  --we can store an addition report uri where we can put ticket sale transaction info in pinata
                );
     
@@ -101,6 +102,8 @@ contract EventTicket is ERC721Full, Ownable {
         //Pay the owner
         owner_address.transfer(20 finney);
         
+        emit Sale(token_id, name);
+        
     }
     
     
@@ -144,7 +147,7 @@ contract EventTicket is ERC721Full, Ownable {
         //Transfer the offered funds to the accepting party.
         msg.sender.transfer(offers[token_id].offer_amount);
         
-        emit Sale(token_id);
+        emit Sale(token_id, offers[token_id].offer_name);
         
     }
     
@@ -205,7 +208,6 @@ contract EventTicket is ERC721Full, Ownable {
         //Perform the transfer
         _transferFrom(owner(), to, token_id);
         
-        emit Sale(token_id);
         
     }
     
