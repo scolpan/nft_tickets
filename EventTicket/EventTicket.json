@@ -155,6 +155,25 @@
 		"constant": false,
 		"inputs": [
 			{
+				"name": "number",
+				"type": "uint256"
+			}
+		],
+		"name": "ticketRegister",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
 				"name": "from",
 				"type": "address"
 			},
@@ -288,25 +307,6 @@
 		"constant": false,
 		"inputs": [
 			{
-				"name": "token_uri",
-				"type": "string"
-			}
-		],
-		"name": "ticketRegister",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
 				"name": "token_id",
 				"type": "uint256"
 			}
@@ -328,6 +328,14 @@
 		"name": "offers",
 		"outputs": [
 			{
+				"name": "offer_time",
+				"type": "uint256"
+			},
+			{
+				"name": "offer_expiry",
+				"type": "uint256"
+			},
+			{
 				"name": "offer_name",
 				"type": "string"
 			},
@@ -346,6 +354,10 @@
 			{
 				"name": "offer_closed",
 				"type": "bool"
+			},
+			{
+				"name": "status",
+				"type": "string"
 			}
 		],
 		"payable": false,
@@ -473,6 +485,20 @@
 				"type": "uint256"
 			}
 		],
+		"name": "collectRefund",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "token_id",
+				"type": "uint256"
+			}
+		],
 		"name": "acceptOffer",
 		"outputs": [],
 		"payable": false,
@@ -565,6 +591,11 @@
 				"indexed": false,
 				"name": "token_id",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "name",
+				"type": "string"
 			}
 		],
 		"name": "Sale",

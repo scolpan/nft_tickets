@@ -23,42 +23,50 @@ contract EventTicket is ERC721Full, Ownable {
     }
     
     struct Offer {
+        uint offer_time;
+        uint offer_expiry;
         string offer_name;
         string offer_email;
         address payable offer_address;
         uint offer_amount;
         bool offer_closed;
+        string status;
     }
     
     mapping(uint => Ticket) public tickets;
     
+    //mapping(uint => Offer[]) public offers;
     mapping(uint => Offer) public offers;
-    
     
     event PurchaseOffer(uint token_id, uint amount);
     
-    
-    
-    event Sale(uint token_id 
+    event Sale(uint token_id,
+               string name
                //string report_uri  --we can store an addition report uri where we can put ticket sale transaction info in pinata
                );
-    
     
     event Reject(uint token_id);
     
     //Ticket can be registered by the owner of the contract.
-    function ticketRegister(string memory token_uri) public onlyOwner returns (uint) {
+    //function ticketRegister(string memory token_uri) public onlyOwner returns (uint) {
+    function ticketRegister(uint number) public onlyOwner returns (uint) {
         
-        token_ids.increment();
-        uint token_id = token_ids.current();
+        uint token_id;
         
-        _mint(owner(), token_id);
+        for (uint i=1; i<=number; i++) {
         
-        _setTokenURI(token_id, token_uri);
+            token_ids.increment();
+            token_id = token_ids.current();
+            
+            _mint(owner(), token_id);
+            
+            //_setTokenURI(token_id, token_uri);
+            
+            tickets[token_id] = Ticket("", "", owner(), 0);
         
-        tickets[token_id] = Ticket("", "", owner(), 0);
+        }
         
-        return token_id;
+        //return token_id;
         
     }
     
@@ -94,6 +102,8 @@ contract EventTicket is ERC721Full, Ownable {
         //Pay the owner
         owner_address.transfer(20 finney);
         
+        emit Sale(token_id, name);
+        
     }
     
     
@@ -101,19 +111,23 @@ contract EventTicket is ERC721Full, Ownable {
         
         require(msg.value > 0 finney && msg.value <= 40 finney, "Offer must be greater than 0 and less than or equal to 40 finney!");
         require(tickets[token_id].timesSold > 0, 'Ticket is not available for an offer!');
+        //Ensure that either the previous offer is closed or the token has never received an offer yet (amount = 0).
+        require(offers[token_id].offer_amount == 0 || offers[token_id].offer_closed, 'There is already an offer pending for this ticket!');
         
         //Add as an offer
-        offers[token_id] = Offer(name, email, msg.sender, msg.value, false);
+        //offers[token_id].push(Offer(name, email, msg.sender, msg.value, false));
+        offers[token_id] = Offer(now, now + 5 minutes, name, email, msg.sender, msg.value, false, 'active');
         
         emit PurchaseOffer(token_id, msg.value);
         
     }
     
+    
     function acceptOffer(uint token_id) public {
         
         //Ensure the accepting party is the owner
         require(ownerOf(token_id) == msg.sender, 'You are not the owner of this ticket!');
-        //Ensure an open offer exists this ticket.
+        //Ensure an open offer exists for this ticket.
         require(offers[token_id].offer_amount > 0 && !offers[token_id].offer_closed, 'This ticket does not have any offers!');
         
         
@@ -124,6 +138,7 @@ contract EventTicket is ERC721Full, Ownable {
         tickets[token_id] = Ticket(offers[token_id].offer_name, offers[token_id].offer_email, offers[token_id].offer_address, tickets[token_id].timesSold);
         
         //Close the offer
+        offers[token_id].status = 'accepted';
         offers[token_id].offer_closed = true;
         
         //Transfer the token to the offering party
@@ -132,7 +147,7 @@ contract EventTicket is ERC721Full, Ownable {
         //Transfer the offered funds to the accepting party.
         msg.sender.transfer(offers[token_id].offer_amount);
         
-        emit Sale(token_id);
+        emit Sale(token_id, offers[token_id].offer_name);
         
     }
     
@@ -145,6 +160,7 @@ contract EventTicket is ERC721Full, Ownable {
         require(offers[token_id].offer_amount > 0 && !offers[token_id].offer_closed, 'This ticket does not have any offers!');
         
         //Close the offer
+        offers[token_id].status = 'rejected';
         offers[token_id].offer_closed = true;
         
         //Refund the offering party
@@ -154,6 +170,20 @@ contract EventTicket is ERC721Full, Ownable {
         
     }
     
+    
+    function collectRefund(uint token_id) public {
+        
+        require(offers[token_id].offer_address == msg.sender, 'This offer was not made by you!');
+        require(now >= offers[token_id].offer_expiry, 'The offer has not expired yet!');
+        require(!offers[token_id].offer_closed, 'This offer is no longer active!');
+        
+        //Close the offer
+        offers[token_id].status = 'refunded';
+        offers[token_id].offer_closed = true;
+        
+        msg.sender.transfer(offers[token_id].offer_amount);
+        
+    }
     
     
     //Gets the next unsold ticket (token_id)
@@ -178,11 +208,7 @@ contract EventTicket is ERC721Full, Ownable {
         //Perform the transfer
         _transferFrom(owner(), to, token_id);
         
-        emit Sale(token_id);
         
     }
-    
-    
-
     
 }
