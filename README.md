@@ -85,8 +85,10 @@ EventTicket is a decentralized application that offers a blockchain solution for
 
 3) Copy the private key of the account you used to deploy your contract and paste it under ACCT_PRIV_KEY in [env.txt](EventTicker/env.txt).
 
-4) Run jupyter notebook and open the [EventTicket](EventTicket/EventTicket.ipynb) notebook.
+4) Rename the env.txt file to .env
 
-5) Once connected, try to emulate a purchase scenario from the process flows above. Enjoy!
+5) Run jupyter notebook and open the [EventTicket](EventTicket/EventTicket.ipynb) notebook.
 
-6) If interested in how web3 is helping us connect to the contract on the blockchain, have a look through our helper code [ticket.py](EventTicket/ticket.py) here.
+6) Once connected, try to run thorugh the purchase scenarios from the process flows above. Enjoy!
+
+7) If interested in how web3 is helping us connect to the contract on the blockchain, have a look through our helper code [ticket.py](EventTicket/ticket.py) here.
