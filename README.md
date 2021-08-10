@@ -12,3 +12,7 @@ TicketBlock is a decentralized application that offers full-stack blockchain sol
 ### Technologies:
 
 Solidity, Go Ethereum, IPFS Companion, Pinata.Cloud, Web3
+
+### Video Demo
+
+[HERE](https://youtu.be/Ih6cbqdMljA)
