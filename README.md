@@ -1,11 +1,6 @@
 ![Ticket](image/ETKN.png)
 
-# EventTicket: Event Sales 
-
-#### Team members:
-#### Sinan Colpan, Carolina Corona, Chimdike Ihe, Dave Dwarakan, Justin Gouin
----
-
+# EventTicket: Decentralized Event Ticketing System  
 
 # Contents:
 
