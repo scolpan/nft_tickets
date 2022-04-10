@@ -1,6 +1,9 @@
 ![Ticket](image/ETKN.png)
 
 # EventTicket: Decentralized Event Ticketing System  
+---
+## Video Demo
+[HERE](https://youtu.be/Ih6cbqdMljA)
 
 # Contents:
 
@@ -39,10 +42,6 @@ EventTicket is a decentralized application that offers a blockchain solution for
 - Metamask
 
 ![Ticket](image/z.png)
-
----
-## Video Demo
-[HERE](https://youtu.be/Ih6cbqdMljA)
 
 ---
 
