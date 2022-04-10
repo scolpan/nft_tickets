@@ -1,7 +1,7 @@
 ![Ticket](image/ETKN.png)
 
 # EventTicket: Decentralized Event Ticketing System  
----
+
 ## Video Demo
 [HERE](https://youtu.be/Ih6cbqdMljA)
 
