@@ -2,8 +2,7 @@
 
 # EventTicket: Decentralized Event Ticketing System  
 
-## Video Demo
-[HERE](https://youtu.be/Ih6cbqdMljA)
+## [Video Demo](https://youtu.be/Ih6cbqdMljA)
 
 # Contents:
 
