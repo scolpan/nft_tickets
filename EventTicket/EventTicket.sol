@@ -13,13 +13,24 @@ contract EventTicket is ERC721Full, Ownable {
     
     using Counters for Counters.Counter;
     
+    Counters.Counter event_ids;
     Counters.Counter token_ids;
     
+    
     struct Ticket {
+        uint event_id;
         string owner_name;
         string owner_email;
         address owner;
         uint timesSold;
+    }
+
+    struct Event {
+        //uint event_id;
+        string event_name;
+        uint event_time;
+        uint event_expiry;
+        string event_host;
     }
     
     struct Offer {
@@ -33,11 +44,33 @@ contract EventTicket is ERC721Full, Ownable {
         string status;
     }
     
+    struct Redeem {
+        uint redeem_time;
+        uint redeem_expiry;
+        uint event_id;
+    }
+
+    struct Token {
+        uint token_id;
+    }
+
+    mapping(address => Token[]) public tokens;
+
+    //mapping(address => uint) public tokenAmountPerAddress;
+
     mapping(uint => Ticket) public tickets;
+
+    mapping(uint => Event) public events;
     
     //mapping(uint => Offer[]) public offers;
     mapping(uint => Offer) public offers;
-    
+
+    mapping(uint => Redeem) public redeemOffers; //an offer can be made to a token
+
+    event EventRegistration(uint event_id, string name);
+
+    event RedeemTicket(address ticket_holder, uint event_id);
+
     event PurchaseOffer(uint token_id, uint amount);
     
     event Sale(uint token_id,
@@ -46,14 +79,28 @@ contract EventTicket is ERC721Full, Ownable {
                );
     
     event Reject(uint token_id);
-    
+
+
+    //Register an event before minting any ticket tokens
     //Ticket can be registered by the owner of the contract.
     //function ticketRegister(string memory token_uri) public onlyOwner returns (uint) {
-    function ticketRegister(uint number) public onlyOwner returns (uint) {
-        
+
+    function eventRegister(string memory eventName, string memory eventHost, uint number) public onlyOwner {
+
+        uint event_id;
         uint token_id;
-        
-        for (uint i=1; i<=number; i++) {
+        uint numberToMint;        
+
+        event_ids.increment();
+        event_id = event_ids.current();
+
+        //A single ticket will need two minted tokens, one will be used to redeem (transferred back to issuing contract during the time of redeem)
+        //The other one will always remain inside the wallet of the purchaser. E.g. We will only redeem the odd numbered tokens.
+        numberToMint = number * 2;
+
+        events[event_id] = Event(eventName, now, now + 24 hours, eventHost);
+
+        for (uint i=1; i<=numberToMint; i++) {
         
             token_ids.increment();
             token_id = token_ids.current();
@@ -62,16 +109,18 @@ contract EventTicket is ERC721Full, Ownable {
             
             //_setTokenURI(token_id, token_uri);
             
-            tickets[token_id] = Ticket("", "", owner(), 0);
+            tickets[token_id] = Ticket(event_id, "", "", owner(), 0);
         
-        }
-        
-        //return token_id;
-        
+        }        
+
+        emit EventRegistration(event_id, eventName);
+
     }
     
+
+    
     //Purchase option available to the general public
-    function ticketPurchase(string memory name, string memory email) public payable returns (uint) {
+    function ticketPurchase(uint event_id, string memory name, string memory email) public payable returns (uint) {
         
         uint returnChange;
         uint token_id;
@@ -90,11 +139,16 @@ contract EventTicket is ERC721Full, Ownable {
         
         //Transfer the Ticket
         initialTicketSale(token_id, msg.sender);
-        
+        //Transfer the other copy.
+        initialTicketSale(token_id - 1, msg.sender);
+
         tickets[token_id].timesSold += 1;
         
         //Store name and address of the new owner and pass on the timesSold var.
-        tickets[token_id] = Ticket(name, email, msg.sender, tickets[token_id].timesSold);
+        tickets[token_id] = Ticket(event_id, name, email, msg.sender, tickets[token_id].timesSold);
+
+        //Associate token with the purchaser address 
+        tokens[msg.sender].push(Token(token_id));
         
         //Give back change
         msg.sender.transfer(returnChange);
@@ -109,6 +163,8 @@ contract EventTicket is ERC721Full, Ownable {
     
     function offerPurchase(uint token_id, string memory name, string memory email) public payable returns (uint) {
         
+        //Only allow even numbered (main tokenid), reject odd numbered (redeemable tokenid) tokenids
+
         require(msg.value > 0 finney && msg.value <= 40 finney, "Offer must be greater than 0 and less than or equal to 40 finney!");
         require(tickets[token_id].timesSold > 0, 'Ticket is not available for an offer!');
         //Ensure that either the previous offer is closed or the token has never received an offer yet (amount = 0).
@@ -129,21 +185,38 @@ contract EventTicket is ERC721Full, Ownable {
         require(ownerOf(token_id) == msg.sender, 'You are not the owner of this ticket!');
         //Ensure an open offer exists for this ticket.
         require(offers[token_id].offer_amount > 0 && !offers[token_id].offer_closed, 'This ticket does not have any offers!');
-        
-        
+                
+        uint sellerTokenAmt;  
+
         //Increase the timesSold counter.
         tickets[token_id].timesSold += 1;
         
         //Transfer ownership (data)
-        tickets[token_id] = Ticket(offers[token_id].offer_name, offers[token_id].offer_email, offers[token_id].offer_address, tickets[token_id].timesSold);
+        tickets[token_id] = Ticket(tickets[token_id].event_id, offers[token_id].offer_name, offers[token_id].offer_email, offers[token_id].offer_address, tickets[token_id].timesSold);
         
         //Close the offer
         offers[token_id].status = 'accepted';
         offers[token_id].offer_closed = true;
         
-        //Transfer the token to the offering party
+        //Transfer the token pair to the offering party
         _transferFrom(msg.sender, offers[token_id].offer_address, token_id);
-        
+        _transferFrom(msg.sender, offers[token_id].offer_address, token_id - 1);
+
+        //Associate token with the purchaser address
+        tokens[offers[token_id].offer_address].push(Token(token_id));
+
+        sellerTokenAmt = tokens[msg.sender].length;
+
+        //Disassociate token with the seller address 
+        for (uint i=0; i < sellerTokenAmt; i++) {
+            if (tokens[msg.sender][i].token_id == token_id) {
+                //Remove association. We do this by copying the last array value over the value we want to remove and then 
+                //removing the last array (.pop).
+                tokens[msg.sender][i] = tokens[msg.sender][sellerTokenAmt - 1];
+                tokens[msg.sender].pop;
+            }
+        }
+
         //Transfer the offered funds to the accepting party.
         msg.sender.transfer(offers[token_id].offer_amount);
         
@@ -184,15 +257,34 @@ contract EventTicket is ERC721Full, Ownable {
         msg.sender.transfer(offers[token_id].offer_amount);
         
     }
+
+
+    function offerRedeem(address token_holder, uint event_id) public onlyOwner {
+
+        //This function will be invoked when the ticket holder will display his/her ticket (wallet address as a barcode)
+        //in which the ticket holder will get a notification to accept or reject.
+        //Create an event variable to see if the wallet being scanned has a ticket for the event or not        
+
+
+
+    }
+
+    function acceptRedeem(uint token_id) public {
     
+
+
+    }
     
+
     //Gets the next unsold ticket (token_id)
     function getAvailableToken() internal view returns (uint) {
         
         uint token_id = 0;
         
         //Loops through all the tokens and returns an available one, if unavailable, returns 0.
-        for (uint i=1; i <= token_ids.current(); i++) {
+        //for (uint i=1; i <= token_ids.current(); i++) {
+        //Loops in increments of two and returns an available token.
+        for (uint i=2; i <= token_ids.current(); i+=2) {
             if (tickets[i].timesSold == 0) {
                 token_id = i;
                 break;
